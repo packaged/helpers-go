@@ -6,7 +6,7 @@ import (
 )
 
 func HashToLength(input string, length int) string {
-	if length <= 0 || length > sha512.Size {
+	if length <= 0 {
 		return ""
 	}
 	hash := sha512.Sum512([]byte(input))

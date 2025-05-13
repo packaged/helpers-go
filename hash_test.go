@@ -33,7 +33,7 @@ func TestHashToLength(t *testing.T) {
 			name:     "Length greater than sha512.Size",
 			input:    "test-input",
 			length:   100,
-			expected: "",
+			expected: "f17fbcdc7aee821520de21628749d456a3c0ca87ffbb7800a915e37e7076743914d6920459aeb89828aee6efc1488f092eae",
 		},
 	}
 
