@@ -99,3 +99,11 @@ var alphanumeric = regexp.MustCompile(`[^a-zA-Z0-9]`)
 func AlphanumericOnly(input string) (output string) {
 	return alphanumeric.ReplaceAllString(input, "")
 }
+
+// Ternary returns vtrue if cond is true, otherwise it returns vfalse.
+func Ternary[T any](cond bool, vtrue, vfalse T) T {
+	if cond {
+		return vtrue
+	}
+	return vfalse
+}
