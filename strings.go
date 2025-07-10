@@ -3,6 +3,7 @@ package helpers
 import (
 	"io"
 	"net/url"
+	"reflect"
 	"regexp"
 	"strings"
 
@@ -30,6 +31,16 @@ func FirstStr(input ...string) string {
 		}
 	}
 	return ""
+}
+
+func Coalesce[T any](input ...T) T {
+	var check T
+	for _, check = range input {
+		if r := reflect.ValueOf(check); r.IsValid() && (r.Kind() != reflect.Pointer || !r.IsNil()) && !r.IsZero() {
+			return check
+		}
+	}
+	return check
 }
 
 func TruncateString(input string, length int) string {
