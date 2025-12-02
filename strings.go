@@ -25,22 +25,25 @@ func BufferToString(buf io.Reader) string {
 }
 
 func FirstStr(input ...string) string {
-	for _, s := range input {
-		if s != "" {
-			return s
-		}
-	}
-	return ""
+	return Coalesce(input...)
 }
 
 func Coalesce[T any](input ...T) T {
 	var check T
 	for _, check = range input {
-		if r := reflect.ValueOf(check); r.IsValid() && (r.Kind() != reflect.Pointer || !r.IsNil()) && !r.IsZero() {
+		if !IsZero(check) {
 			return check
 		}
 	}
 	return check
+}
+
+func IsZero(input any) bool {
+	if input == nil {
+		return true
+	}
+	r := reflect.ValueOf(input)
+	return !r.IsValid() || (r.Kind() == reflect.Pointer && r.IsNil()) || r.IsZero()
 }
 
 func TruncateString(input string, length int) string {
