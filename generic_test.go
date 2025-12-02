@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestTernary(t *testing.T) {
+func TestIf(t *testing.T) {
 	tests := []struct {
 		cond   bool
 		input  [2]any
@@ -19,7 +19,7 @@ func TestTernary(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		result := Ternary(test.cond, test.input[0], test.input[1])
+		result := If(test.cond, test.input[0], test.input[1])
 		assert.Equal(t, test.output, result)
 	}
 }

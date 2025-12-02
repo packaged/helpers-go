@@ -23,8 +23,8 @@ func Overlaps[T comparable](a, b []T) bool {
 	return false
 }
 
-// Ternary returns vtrue if cond is true, otherwise it returns vfalse.
-func Ternary[T any](cond bool, vtrue, vfalse T) T {
+// If A generic ternary function which returns vtrue if cond is true, otherwise it returns vfalse.
+func If[T any](cond bool, vtrue, vfalse T) T {
 	if cond {
 		return vtrue
 	}
