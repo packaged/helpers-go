@@ -1,5 +1,7 @@
 package helpers
 
+import "reflect"
+
 func Ref[T any](in T) *T {
 	return &in
 }
@@ -29,4 +31,22 @@ func If[T any](cond bool, vtrue, vfalse T) T {
 		return vtrue
 	}
 	return vfalse
+}
+
+func Coalesce[T any](input ...T) T {
+	var check T
+	for _, check = range input {
+		if !IsZero(check) {
+			return check
+		}
+	}
+	return check
+}
+
+func IsZero(input any) bool {
+	if input == nil {
+		return true
+	}
+	r := reflect.ValueOf(input)
+	return !r.IsValid() || (r.Kind() == reflect.Pointer && r.IsNil()) || r.IsZero()
 }

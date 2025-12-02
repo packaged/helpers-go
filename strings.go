@@ -3,7 +3,6 @@ package helpers
 import (
 	"io"
 	"net/url"
-	"reflect"
 	"regexp"
 	"strings"
 
@@ -26,24 +25,6 @@ func BufferToString(buf io.Reader) string {
 
 func FirstStr(input ...string) string {
 	return Coalesce(input...)
-}
-
-func Coalesce[T any](input ...T) T {
-	var check T
-	for _, check = range input {
-		if !IsZero(check) {
-			return check
-		}
-	}
-	return check
-}
-
-func IsZero(input any) bool {
-	if input == nil {
-		return true
-	}
-	r := reflect.ValueOf(input)
-	return !r.IsValid() || (r.Kind() == reflect.Pointer && r.IsNil()) || r.IsZero()
 }
 
 func TruncateString(input string, length int) string {
