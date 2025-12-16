@@ -2,6 +2,7 @@ package helpers
 
 import (
 	"io"
+	"math/rand"
 	"net/url"
 	"regexp"
 	"strings"
@@ -98,4 +99,54 @@ var alphanumeric = regexp.MustCompile(`[^a-zA-Z0-9]`)
 // AlphanumericOnly removes non-alphanumeric chars from string
 func AlphanumericOnly(input string) (output string) {
 	return alphanumeric.ReplaceAllString(input, "")
+}
+
+func Pattern(pattern string) string {
+	var result strings.Builder
+	for _, ch := range pattern {
+		char := ch
+		switch char {
+		case '!':
+			match := []rune{'X', '0'}
+			char = match[rand.Intn(2)]
+		case '?':
+			match := []rune{'x', '0'}
+			char = match[rand.Intn(2)]
+		case '*':
+			match := []rune{'x', '0', 'X'}
+			char = match[rand.Intn(3)]
+		}
+
+		switch char {
+		case 'X':
+			result.WriteByte(byte(rand.Intn(26) + 65)) // A-Z
+		case 'x':
+			result.WriteByte(byte(rand.Intn(26) + 97)) // a-z
+		case '0':
+			result.WriteByte(byte(rand.Intn(10) + 48)) // 0-9
+		default:
+			if char >= '1' && char <= '9' {
+				maxDigit := int(char - '0')
+				result.WriteByte(byte(rand.Intn(maxDigit+1) + 48))
+			} else {
+				result.WriteRune(char)
+			}
+		}
+	}
+	return result.String()
+}
+
+func VerifyPattern(template, pattern string) bool {
+	replacer := strings.NewReplacer(
+		"X", "[A-Z]",
+		"x", "[a-z]",
+		"0", "[0-9]",
+		"5", "[0-5]",
+		"?", "[a-z0-9]",
+		"!", "[A-Z0-9]",
+		"*", "[a-zA-Z0-9]",
+	)
+	regexPattern := replacer.Replace(template)
+	re := regexp.MustCompile("^" + regexPattern + "$")
+	return re.MatchString(pattern)
 }
