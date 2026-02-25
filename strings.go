@@ -25,12 +25,7 @@ func BufferToString(buf io.Reader) string {
 }
 
 func FirstStr(input ...string) string {
-	for _, s := range input {
-		if s != "" {
-			return s
-		}
-	}
-	return ""
+	return Coalesce(input...)
 }
 
 func TruncateString(input string, length int) string {

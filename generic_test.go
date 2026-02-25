@@ -23,3 +23,28 @@ func TestIf(t *testing.T) {
 		assert.Equal(t, test.output, result)
 	}
 }
+
+func TestCoalesce(t *testing.T) {
+	tests := []struct {
+		input  []any
+		output any
+	}{
+		{[]any{"", "", "hello"}, "hello"},
+		{[]any{"", "world", ""}, "world"},
+		{[]any{"", "", ""}, ""},
+		{[]any{0, 0, 1}, 1},
+		{[]any{0, 2, 1}, 2},
+		{[]any{0, 0, 0}, 0},
+		{[]any{nil, nil, "hello"}, "hello"},
+		{[]any{nil, "world", nil}, "world"},
+		{[]any{nil, "", nil}, nil},
+		{[]any{nil, nil, nil}, nil},
+		{[]any{nil, 2, nil}, 2},
+		{[]any{nil, 0, nil}, nil},
+	}
+
+	for _, test := range tests {
+		result := Coalesce(test.input...)
+		assert.Equal(t, test.output, result)
+	}
+}
