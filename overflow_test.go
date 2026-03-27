@@ -52,6 +52,99 @@ func TestIntToUint32(t *testing.T) {
 	}
 }
 
+func TestInt64ToUint32(t *testing.T) {
+	tests := []struct {
+		in       int64
+		expected uint32
+	}{
+		{0, 0},
+		{-1, 0},
+		{math.MinInt64, 0},
+		{math.MaxUint32, math.MaxUint32},
+		{math.MaxUint32 + 1, math.MaxUint32},
+		{math.MaxInt64, math.MaxUint32},
+	}
+
+	for _, test := range tests {
+		t.Run(strconv.FormatInt(test.in, 10), func(t *testing.T) {
+			assert.EqualValues(t, test.expected, Int64ToUint32(test.in))
+		})
+	}
+}
+
+func TestInt64ToUint64(t *testing.T) {
+	tests := []struct {
+		in       int64
+		expected uint64
+	}{
+		{0, 0},
+		{-1, 0},
+		{math.MinInt64, 0},
+		{math.MaxInt64, math.MaxInt64},
+		{1, 1},
+	}
+
+	for _, test := range tests {
+		t.Run(strconv.FormatInt(test.in, 10), func(t *testing.T) {
+			assert.EqualValues(t, test.expected, Int64ToUint64(test.in))
+		})
+	}
+}
+
+func TestUint64ToInt64(t *testing.T) {
+	tests := []struct {
+		in       uint64
+		expected int64
+	}{
+		{0, 0},
+		{math.MaxInt64, math.MaxInt64},
+		{math.MaxInt64 + 1, math.MaxInt64},
+		{math.MaxUint64, math.MaxInt64},
+	}
+
+	for _, test := range tests {
+		t.Run(strconv.FormatUint(test.in, 10), func(t *testing.T) {
+			assert.EqualValues(t, test.expected, Uint64ToInt64(test.in))
+		})
+	}
+}
+
+func TestUint64ToInt32(t *testing.T) {
+	tests := []struct {
+		in       uint64
+		expected int32
+	}{
+		{0, 0},
+		{math.MaxInt32, math.MaxInt32},
+		{math.MaxInt32 + 1, math.MaxInt32},
+		{math.MaxUint64, math.MaxInt32},
+	}
+
+	for _, test := range tests {
+		t.Run(strconv.FormatUint(test.in, 10), func(t *testing.T) {
+			assert.EqualValues(t, test.expected, Uint64ToInt32(test.in))
+		})
+	}
+}
+
+func TestUint64ToUint32(t *testing.T) {
+	tests := []struct {
+		in       uint64
+		expected uint32
+	}{
+		{0, 0},
+		{math.MaxUint32, math.MaxUint32},
+		{math.MaxUint32 + 1, math.MaxUint32},
+		{math.MaxUint64, math.MaxUint32},
+	}
+
+	for _, test := range tests {
+		t.Run(strconv.FormatUint(test.in, 10), func(t *testing.T) {
+			assert.EqualValues(t, test.expected, Uint64ToUint32(test.in))
+		})
+	}
+}
+
 func TestMonthToInt32(t *testing.T) {
 	tests := []struct {
 		in       time.Month
