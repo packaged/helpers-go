@@ -1,5 +1,6 @@
 package helpers
 
+// Deprecated, use new()
 func Ref[T any](in T) *T {
 	return &in
 }
