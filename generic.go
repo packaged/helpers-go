@@ -1,8 +1,10 @@
 package helpers
 
-// Deprecated, use new()
+// Ref is deprecated.
+//
+//go:fix inline
 func Ref[T any](in T) *T {
-	return &in
+	return new(in)
 }
 
 func Deref[T comparable](in *T) T {
