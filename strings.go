@@ -61,8 +61,7 @@ func GetLanguageFromLocale(locale string) string {
 	return locale[:2]
 }
 
-// maxBrowserLanguageLength is the EMV 3DS 2.2 limit on the browserLanguage data
-// element. The field widens to 35 characters in 3DS 2.3, but 8 is within both.
+// maxBrowserLanguageLength is the longest browser language tag we emit.
 const maxBrowserLanguageLength = 8
 
 // browserLanguageRegion matches a BCP 47 region subtag: two letters, or the
@@ -70,23 +69,20 @@ const maxBrowserLanguageLength = 8
 // four letters and variants five to eight, so neither can be mistaken for one.
 var browserLanguageRegion = regexp.MustCompile(`^([A-Za-z]{2}|[0-9]{3})$`)
 
-// NormalizeBrowserLanguage fits a browser-supplied BCP 47 language tag into the
-// EMV 3DS browserLanguage element. Tags carrying a script or variant subtag
-// ("en-GB-oxendict", "zh-Hans-CN", "ca-ES-valencia") are valid BCP 47 but exceed
-// the limit, and a 3DS server rejects the whole AReq rather than ignoring the
-// field.
+// NormalizeBrowserLanguage shortens a browser-supplied BCP 47 language tag to
+// fit maxBrowserLanguageLength. Tags carrying a script or variant subtag
+// ("en-GB-oxendict", "zh-Hans-CN", "ca-ES-valencia") are perfectly valid but
+// longer than that.
 //
-// Reduce to language-region, dropping any script and variant in between, rather
-// than simply cutting subtags off the end. The two differ only for tags carrying
-// both a script and a region, where the end-cutting approach keeps the script
+// It reduces to language-region, dropping any script and variant in between,
+// rather than cutting subtags off the end. The two differ only for tags carrying
+// both a script and a region, where cutting from the end keeps the script
 // ("zh-Hans") and this keeps the region ("zh-CN"). language-region is the shape
-// browsers overwhelmingly report, so it is the shape an ACS is most likely to
-// recognise when picking a challenge language, and for Chinese the region
-// implies the script anyway. It also leaves the ACS a region to correlate
-// against the billing country.
+// browsers overwhelmingly report and consumers therefore recognise, and for
+// Chinese the region implies the script anyway.
 //
-// Truncating to length instead would emit "en-GB-ox", trading a length error for
-// a format one.
+// The result is always a well-formed tag - truncating to length would emit
+// "en-GB-ox".
 func NormalizeBrowserLanguage(tag string) string {
 	tag = strings.TrimSpace(tag)
 	if len(tag) <= maxBrowserLanguageLength {
@@ -110,7 +106,7 @@ func NormalizeBrowserLanguage(tag string) string {
 	}
 
 	// An oversized primary subtag is not a valid language tag whatever we do, so
-	// keep the field within length and let the server judge the value.
+	// keep the result within length and let the consumer judge the value.
 	return TruncateStringToRune(language, maxBrowserLanguageLength)
 }
 
