@@ -65,14 +65,28 @@ func GetLanguageFromLocale(locale string) string {
 // element. The field widens to 35 characters in 3DS 2.3, but 8 is within both.
 const maxBrowserLanguageLength = 8
 
+// browserLanguageRegion matches a BCP 47 region subtag: two letters, or the
+// three-digit UN M.49 form ("419" for Latin America). Script subtags are always
+// four letters and variants five to eight, so neither can be mistaken for one.
+var browserLanguageRegion = regexp.MustCompile(`^([A-Za-z]{2}|[0-9]{3})$`)
+
 // NormalizeBrowserLanguage fits a browser-supplied BCP 47 language tag into the
 // EMV 3DS browserLanguage element. Tags carrying a script or variant subtag
 // ("en-GB-oxendict", "zh-Hans-CN", "ca-ES-valencia") are valid BCP 47 but exceed
 // the limit, and a 3DS server rejects the whole AReq rather than ignoring the
-// field. Drop trailing subtags until the tag fits, so what we send is still a
-// well-formed tag - truncating mid-subtag would trade a length error for a
-// format one, and dropping straight to the primary language would needlessly
-// lose the region that issuers use to pick a challenge language.
+// field.
+//
+// Reduce to language-region, dropping any script and variant in between, rather
+// than simply cutting subtags off the end. The two differ only for tags carrying
+// both a script and a region, where the end-cutting approach keeps the script
+// ("zh-Hans") and this keeps the region ("zh-CN"). language-region is the shape
+// browsers overwhelmingly report, so it is the shape an ACS is most likely to
+// recognise when picking a challenge language, and for Chinese the region
+// implies the script anyway. It also leaves the ACS a region to correlate
+// against the billing country.
+//
+// Truncating to length instead would emit "en-GB-ox", trading a length error for
+// a format one.
 func NormalizeBrowserLanguage(tag string) string {
 	tag = strings.TrimSpace(tag)
 	if len(tag) <= maxBrowserLanguageLength {
@@ -80,15 +94,24 @@ func NormalizeBrowserLanguage(tag string) string {
 	}
 
 	subtags := strings.Split(tag, "-")
-	for i := len(subtags) - 1; i > 0; i-- {
-		if candidate := strings.Join(subtags[:i], "-"); len(candidate) <= maxBrowserLanguageLength {
-			return candidate
+	language := subtags[0]
+
+	for _, subtag := range subtags[1:] {
+		// A single-character subtag is an extension singleton; no region follows.
+		if len(subtag) == 1 {
+			break
+		}
+		if browserLanguageRegion.MatchString(subtag) {
+			if candidate := language + "-" + subtag; len(candidate) <= maxBrowserLanguageLength {
+				return candidate
+			}
+			break
 		}
 	}
 
 	// An oversized primary subtag is not a valid language tag whatever we do, so
 	// keep the field within length and let the server judge the value.
-	return TruncateStringToRune(subtags[0], maxBrowserLanguageLength)
+	return TruncateStringToRune(language, maxBrowserLanguageLength)
 }
 
 var localeRegex = regexp.MustCompile("[a-z]{2}-[A-Z]{2}")
