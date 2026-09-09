@@ -152,3 +152,42 @@ func TestAlphanumericOnly(t *testing.T) {
 	assert.Equal(t, "BuckyOHare", AlphanumericOnly("Bucky O'Hare"))
 	assert.Equal(t, "abc123", AlphanumericOnly("abc > 123"))
 }
+
+func TestNormalizeBrowserLanguage(t *testing.T) {
+	tests := []struct {
+		name   string
+		tag    string
+		expect string
+	}{
+		{"empty", "", ""},
+		{"language only", "en", "en"},
+		{"language and region", "en-GB", "en-GB"},
+		{"region preserved", "pt-BR", "pt-BR"},
+		{"script kept when it fits alone", "zh-Hans", "zh-Hans"},
+		{"numeric region kept", "es-419", "es-419"},
+		{"at the limit", "ca-ES-va", "ca-ES-va"},
+		{"variant dropped", "en-GB-oxendict", "en-GB"},
+		{"valencian variant dropped", "ca-ES-valencia", "ca-ES"},
+		{"script dropped, region kept", "zh-Hans-CN", "zh-CN"},
+		{"traditional chinese region kept", "zh-Hant-TW", "zh-TW"},
+		{"hong kong region kept", "zh-Hant-HK", "zh-HK"},
+		{"serbian script dropped for region", "sr-Latn-RS", "sr-RS"},
+		{"azerbaijani script dropped for region", "az-Latn-AZ", "az-AZ"},
+		{"year variant dropped", "de-DE-1996", "de-DE"},
+		{"extlang skipped for region", "zh-yue-HK", "zh-HK"},
+		{"extension singleton stops the scan", "en-US-u-ca-gregory", "en-US"},
+		{"no region falls back to language", "abcdefg-Hant", "abcdefg"},
+		{"oversized primary subtag truncated", "abcdefghij", "abcdefgh"},
+		{"region that would not fit is dropped", "abcdefgh-GB", "abcdefgh"},
+		{"whitespace trimmed", "  en-GB-oxendict  ", "en-GB"},
+		{"lowercase region matched", "en-gb-oxendict", "en-gb"},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			got := NormalizeBrowserLanguage(test.tag)
+			assert.Equal(t, test.expect, got)
+			assert.LessOrEqual(t, len(got), maxBrowserLanguageLength)
+		})
+	}
+}

@@ -61,6 +61,55 @@ func GetLanguageFromLocale(locale string) string {
 	return locale[:2]
 }
 
+// maxBrowserLanguageLength is the longest browser language tag we emit.
+const maxBrowserLanguageLength = 8
+
+// browserLanguageRegion matches a BCP 47 region subtag: two letters, or the
+// three-digit UN M.49 form ("419" for Latin America). Script subtags are always
+// four letters and variants five to eight, so neither can be mistaken for one.
+var browserLanguageRegion = regexp.MustCompile(`^([A-Za-z]{2}|[0-9]{3})$`)
+
+// NormalizeBrowserLanguage shortens a browser-supplied BCP 47 language tag to
+// fit maxBrowserLanguageLength. Tags carrying a script or variant subtag
+// ("en-GB-oxendict", "zh-Hans-CN", "ca-ES-valencia") are perfectly valid but
+// longer than that.
+//
+// It reduces to language-region, dropping any script and variant in between,
+// rather than cutting subtags off the end. The two differ only for tags carrying
+// both a script and a region, where cutting from the end keeps the script
+// ("zh-Hans") and this keeps the region ("zh-CN"). language-region is the shape
+// browsers overwhelmingly report and consumers therefore recognise, and for
+// Chinese the region implies the script anyway.
+//
+// The result is always a well-formed tag - truncating to length would emit
+// "en-GB-ox".
+func NormalizeBrowserLanguage(tag string) string {
+	tag = strings.TrimSpace(tag)
+	if len(tag) <= maxBrowserLanguageLength {
+		return tag
+	}
+
+	subtags := strings.Split(tag, "-")
+	language := subtags[0]
+
+	for _, subtag := range subtags[1:] {
+		// A single-character subtag is an extension singleton; no region follows.
+		if len(subtag) == 1 {
+			break
+		}
+		if browserLanguageRegion.MatchString(subtag) {
+			if candidate := language + "-" + subtag; len(candidate) <= maxBrowserLanguageLength {
+				return candidate
+			}
+			break
+		}
+	}
+
+	// An oversized primary subtag is not a valid language tag whatever we do, so
+	// keep the result within length and let the consumer judge the value.
+	return TruncateStringToRune(language, maxBrowserLanguageLength)
+}
+
 var localeRegex = regexp.MustCompile("[a-z]{2}-[A-Z]{2}")
 
 //func GetLocale(request psp.BaseTransactionRequest) string {
