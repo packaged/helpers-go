@@ -61,6 +61,36 @@ func GetLanguageFromLocale(locale string) string {
 	return locale[:2]
 }
 
+// maxBrowserLanguageLength is the EMV 3DS 2.2 limit on the browserLanguage data
+// element. The field widens to 35 characters in 3DS 2.3, but 8 is within both.
+const maxBrowserLanguageLength = 8
+
+// NormalizeBrowserLanguage fits a browser-supplied BCP 47 language tag into the
+// EMV 3DS browserLanguage element. Tags carrying a script or variant subtag
+// ("en-GB-oxendict", "zh-Hans-CN", "ca-ES-valencia") are valid BCP 47 but exceed
+// the limit, and a 3DS server rejects the whole AReq rather than ignoring the
+// field. Drop trailing subtags until the tag fits, so what we send is still a
+// well-formed tag - truncating mid-subtag would trade a length error for a
+// format one, and dropping straight to the primary language would needlessly
+// lose the region that issuers use to pick a challenge language.
+func NormalizeBrowserLanguage(tag string) string {
+	tag = strings.TrimSpace(tag)
+	if len(tag) <= maxBrowserLanguageLength {
+		return tag
+	}
+
+	subtags := strings.Split(tag, "-")
+	for i := len(subtags) - 1; i > 0; i-- {
+		if candidate := strings.Join(subtags[:i], "-"); len(candidate) <= maxBrowserLanguageLength {
+			return candidate
+		}
+	}
+
+	// An oversized primary subtag is not a valid language tag whatever we do, so
+	// keep the field within length and let the server judge the value.
+	return TruncateStringToRune(subtags[0], maxBrowserLanguageLength)
+}
+
 var localeRegex = regexp.MustCompile("[a-z]{2}-[A-Z]{2}")
 
 //func GetLocale(request psp.BaseTransactionRequest) string {

@@ -152,3 +152,33 @@ func TestAlphanumericOnly(t *testing.T) {
 	assert.Equal(t, "BuckyOHare", AlphanumericOnly("Bucky O'Hare"))
 	assert.Equal(t, "abc123", AlphanumericOnly("abc > 123"))
 }
+
+func TestNormalizeBrowserLanguage(t *testing.T) {
+	tests := []struct {
+		name   string
+		tag    string
+		expect string
+	}{
+		{"empty", "", ""},
+		{"language only", "en", "en"},
+		{"language and region", "en-GB", "en-GB"},
+		{"region preserved", "pt-BR", "pt-BR"},
+		{"at the limit", "ca-ES-va", "ca-ES-va"},
+		{"variant dropped", "en-GB-oxendict", "en-GB"},
+		{"valencian variant dropped", "ca-ES-valencia", "ca-ES"},
+		{"script kept, region dropped", "zh-Hans-CN", "zh-Hans"},
+		{"latin script kept", "sr-Latn-RS", "sr-Latn"},
+		{"year variant dropped", "de-DE-1996", "de-DE"},
+		{"long script drops to language", "abcdefg-Hant", "abcdefg"},
+		{"oversized primary subtag truncated", "abcdefghij", "abcdefgh"},
+		{"whitespace trimmed", "  en-GB-oxendict  ", "en-GB"},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			got := NormalizeBrowserLanguage(test.tag)
+			assert.Equal(t, test.expect, got)
+			assert.LessOrEqual(t, len(got), maxBrowserLanguageLength)
+		})
+	}
+}
