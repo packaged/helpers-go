@@ -54,6 +54,10 @@ func FilterEmptyStrings(input []string) []string {
 	return out
 }
 
+// GetLanguageFromLocale returns the first two characters of a locale.
+//
+// Deprecated: three-letter languages come out wrong ("fil-PH" gives "fi"). Use
+// github.com/packaged/rwd-go/locale.Language, which parses the BCP 47 tag.
 func GetLanguageFromLocale(locale string) string {
 	if len(locale) < 2 {
 		return ""
@@ -83,6 +87,10 @@ var browserLanguageRegion = regexp.MustCompile(`^([A-Za-z]{2}|[0-9]{3})$`)
 //
 // The result is always a well-formed tag - truncating to length would emit
 // "en-GB-ox".
+//
+// Deprecated: the 8-character limit is EMV 3DS 2.1.0 and 2.2.0's browserLanguage
+// limit, not a general one. Use github.com/packaged/rwd-go/locale.Truncate for
+// standard RFC 5646 truncation to any length.
 func NormalizeBrowserLanguage(tag string) string {
 	tag = strings.TrimSpace(tag)
 	if len(tag) <= maxBrowserLanguageLength {
@@ -123,6 +131,11 @@ var localeRegex = regexp.MustCompile("[a-z]{2}-[A-Z]{2}")
 //	return fmt.Sprintf("%s-%s", locale, strings.ToUpper(string(request.Meta.BillingAddress.Country)))
 //}
 
+// GetCountryFromLocale returns a locale from its fourth character on.
+//
+// Deprecated: tags with a script or variant come out wrong ("zh-Hant-TW" gives
+// "Hant-TW"). Use github.com/packaged/rwd-go/country.FromLocale, or
+// github.com/packaged/rwd-go/locale.Region for the region code.
 func GetCountryFromLocale(locale string) string {
 	if len(locale) < 5 {
 		return ""
